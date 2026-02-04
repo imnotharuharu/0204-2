@@ -3,12 +3,22 @@ package com.example.demo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.demo.form.TodoForm;
+import com.example.demo.service.TodoService;
 
 @Controller
 public class TodoController {
+
+    private final TodoService todoService;
+
+    public TodoController(TodoService todoService) {
+        this.todoService = todoService;
+    }
 
     // Display the list of todos.
     @GetMapping("/todos")
@@ -24,31 +34,17 @@ public class TodoController {
 
     // Receive form data and show confirmation.
     @PostMapping("/todos/confirm")
-    public String confirm(
-        @RequestParam String title,
-        @RequestParam(required = false) String description,
-        @RequestParam(defaultValue = "3") Integer priority,
-        Model model
-    ) {
-        model.addAttribute("title", title);
-        model.addAttribute("description", description);
-        model.addAttribute("priority", priority);
+    public String confirm(@ModelAttribute TodoForm todoForm, Model model) {
+        model.addAttribute("todoForm", todoForm);
         return "todo/confirm";
     }
 
     // Receive hidden fields from confirmation and complete registration.
     @PostMapping("/todos/complete")
-    public String complete(
-        @RequestParam String title,
-        @RequestParam(required = false) String description,
-        @RequestParam(defaultValue = "3") Integer priority,
-        Model model
-    ) {
-        // In a real app, persist the todo here.
-        model.addAttribute("title", title);
-        model.addAttribute("description", description);
-        model.addAttribute("priority", priority);
-        return "todo/complete";
+    public String complete(@ModelAttribute TodoForm todoForm, RedirectAttributes redirectAttributes) {
+        todoService.createFromForm(todoForm);
+        redirectAttributes.addFlashAttribute("successMessage", "登録が完了しました");
+        return "redirect:/todos";
     }
 
     // Display the details for a single todo by id.

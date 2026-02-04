@@ -24,20 +24,20 @@
       <form th:action="@{/todos/complete}" method="post" class="card p-4 shadow-sm">
         <div class="mb-3">
           <label class="form-label">タイトル</label>
-          <input type="text" class="form-control" th:value="${title}" readonly />
-          <input type="hidden" name="title" th:value="${title}" />
+          <input type="text" class="form-control" th:value="${todoForm.title}" readonly />
+          <input type="hidden" name="title" th:value="${todoForm.title}" />
         </div>
 
         <div class="mb-3">
           <label class="form-label">説明</label>
-          <textarea class="form-control" rows="4" readonly th:text="${description}"></textarea>
-          <input type="hidden" name="description" th:value="${description}" />
+          <textarea class="form-control" rows="4" readonly th:text="${todoForm.description}"></textarea>
+          <input type="hidden" name="description" th:value="${todoForm.description}" />
         </div>
 
         <div class="mb-3">
           <label class="form-label">優先度</label>
-          <input type="text" class="form-control" th:value="${priority}" readonly />
-          <input type="hidden" name="priority" th:value="${priority}" />
+          <input type="text" class="form-control" th:value="${todoForm.priority}" readonly />
+          <input type="hidden" name="priority" th:value="${todoForm.priority}" />
         </div>
 
         <div class="d-flex gap-2">
