@@ -40,6 +40,13 @@ public class TodoController {
         return "todo/confirm";
     }
 
+    // Allow direct access to confirmation page (GET).
+    @GetMapping("/todos/confirm")
+    public String confirmPage(Model model) {
+        model.addAttribute("todoForm", new TodoForm());
+        return "todo/confirm";
+    }
+
     // Receive hidden fields from confirmation and complete registration.
     @PostMapping("/todos/complete")
     public String complete(@ModelAttribute TodoForm todoForm, RedirectAttributes redirectAttributes) {

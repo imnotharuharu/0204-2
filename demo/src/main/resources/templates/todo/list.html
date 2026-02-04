@@ -47,8 +47,8 @@
               <td>
                 <span
                   class="badge"
-                  th:classappend="${todo.done} ? ' bg-success' : ' bg-secondary'"
-                  th:text="${todo.done} ? '完了' : '未完了'"
+                  th:classappend="${todo.completed} ? ' bg-success' : ' bg-secondary'"
+                  th:text="${todo.completed} ? '完了' : '未完了'"
                   >未完了</span
                 >
               </td>
