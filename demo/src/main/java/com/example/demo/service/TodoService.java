@@ -59,4 +59,10 @@ public class TodoService {
         todo.setVersion(form.getVersion());
         todoRepository.save(todo);
     }
+
+    public void toggleCompleted(Long id) {
+        Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+        todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
+        todoRepository.save(todo);
+    }
 }

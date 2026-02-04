@@ -62,7 +62,9 @@
           </thead>
           <tbody>
             <tr th:each="todo : ${todos}">
-              <td th:text="${todo.title}">サンプル</td>
+              <td>
+                <span th:text="${todo.title}" th:classappend="${todo.completed} ? ' text-decoration-line-through text-muted' : ''">サンプル</span>
+              </td>
               <td>
                 <span
                   th:text="${todo.dueDate != null} ? ${#temporals.format(todo.dueDate, 'yyyy/MM/dd')} : '未設定'"
@@ -77,8 +79,13 @@
                 <span th:if="${todo.priority == null}" class="text-muted">-</span>
               </td>
               <td>
-                <span class="text-success" th:if="${todo.completed}">✓</span>
-                <span class="text-muted" th:if="${!todo.completed}">-</span>
+                <!-- Non-ajax (standard) toggle -->
+                <form th:action="@{/todos/{id}/toggle(id=${todo.id})}" method="post" class="d-inline toggle-form">
+                  <button type="submit" class="btn btn-sm btn-outline-success">
+                    <span th:if="${todo.completed}">✓</span>
+                    <span th:unless="${todo.completed}">未完</span>
+                  </button>
+                </form>
               </td>
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
@@ -109,6 +116,21 @@
       crossorigin="anonymous"
     ></script>
     <script>
+      // Optional AJAX toggle: add data-ajax="true" to enable.
+      document.querySelectorAll(".toggle-form[data-ajax='true']").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          try {
+            const response = await fetch(form.action, { method: "POST" });
+            if (response.ok) {
+              window.location.reload();
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      });
+
       const alerts = document.querySelectorAll(".alert");
       alerts.forEach((alert) => {
         setTimeout(() => {
