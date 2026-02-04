@@ -61,9 +61,9 @@ public class TodoController {
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             todoService.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "削除が完了しました");
+            redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
         } catch (TodoNotFoundException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "指定されたToDoが見つかりません");
+            redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
         }
         return "redirect:/todos";
     }

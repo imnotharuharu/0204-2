@@ -19,11 +19,21 @@
     </header>
 
     <main class="container">
-      <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}">
+      <div
+        th:if="${successMessage}"
+        class="alert alert-success alert-dismissible fade show"
+        role="alert"
+        th:text="${successMessage}"
+      >
         登録が完了しました
       </div>
-      <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}">
-        指定されたToDoが見つかりません
+      <div
+        th:if="${errorMessage}"
+        class="alert alert-danger alert-dismissible fade show"
+        role="alert"
+        th:text="${errorMessage}"
+      >
+        削除に失敗しました
       </div>
 
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -98,5 +108,14 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      const alerts = document.querySelectorAll(".alert");
+      alerts.forEach((alert) => {
+        setTimeout(() => {
+          alert.classList.remove("show");
+          alert.classList.add("hide");
+        }, 3000);
+      });
+    </script>
   </body>
 </html>
