@@ -32,25 +32,32 @@
         <table class="table table-striped table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th scope="col">ID</th>
               <th scope="col">タイトル</th>
-              <th scope="col">期限</th>
-              <th scope="col">状態</th>
+              <th scope="col">期限日</th>
+              <th scope="col">優先度</th>
+              <th scope="col">完了</th>
               <th scope="col" class="text-end">操作</th>
             </tr>
           </thead>
           <tbody>
             <tr th:each="todo : ${todos}">
-              <td th:text="${todo.id}">1</td>
               <td th:text="${todo.title}">サンプル</td>
-              <td th:text="${todo.dueDate}">2026-02-04</td>
               <td>
                 <span
-                  class="badge"
-                  th:classappend="${todo.completed} ? ' bg-success' : ' bg-secondary'"
-                  th:text="${todo.completed} ? '完了' : '未完了'"
-                  >未完了</span
+                  th:text="${todo.dueDate != null} ? ${#temporals.format(todo.dueDate, 'yyyy/MM/dd')} : '未設定'"
+                  th:classappend="${todo.dueDate != null and todo.dueDate.isBefore(T(java.time.LocalDate).now())} ? ' text-danger' : ''"
+                  >2026/02/04</span
                 >
+              </td>
+              <td>
+                <span th:if="${todo.priority != null}">
+                  <span th:each="i : ${#numbers.sequence(1, todo.priority)}">★</span>
+                </span>
+                <span th:if="${todo.priority == null}" class="text-muted">-</span>
+              </td>
+              <td>
+                <span class="text-success" th:if="${todo.completed}">✓</span>
+                <span class="text-muted" th:if="${!todo.completed}">-</span>
               </td>
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
