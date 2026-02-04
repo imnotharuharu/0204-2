@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -20,8 +20,8 @@
 
     <main class="container">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h4 mb-0">ToDo ??</h2>
-        <a class="btn btn-primary" th:href="@{/todos/new}">????</a>
+        <h2 class="h4 mb-0">ToDo 一覧</h2>
+        <a class="btn btn-primary" th:href="@{/todos/new}">新規作成</a>
       </div>
 
       <div class="table-responsive">
@@ -29,33 +29,33 @@
           <thead class="table-light">
             <tr>
               <th scope="col">ID</th>
-              <th scope="col">????</th>
-              <th scope="col">??</th>
-              <th scope="col">??</th>
-              <th scope="col" class="text-end">??</th>
+              <th scope="col">タイトル</th>
+              <th scope="col">期限</th>
+              <th scope="col">状態</th>
+              <th scope="col" class="text-end">操作</th>
             </tr>
           </thead>
           <tbody>
             <tr th:each="todo : ${todos}">
               <td th:text="${todo.id}">1</td>
-              <td th:text="${todo.title}">????</td>
+              <td th:text="${todo.title}">サンプル</td>
               <td th:text="${todo.dueDate}">2026-02-04</td>
               <td>
                 <span
                   class="badge"
                   th:classappend="${todo.done} ? ' bg-success' : ' bg-secondary'"
-                  th:text="${todo.done} ? '??' : '???'"
-                  >???</span
+                  th:text="${todo.done} ? '完了' : '未完了'"
+                  >未完了</span
                 >
               </td>
               <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">??</a>
-                <a class="btn btn-sm btn-outline-primary" th:href="@{/todos/{id}/edit(id=${todo.id})}">??</a>
-                <a class="btn btn-sm btn-outline-danger" th:href="@{/todos/{id}/delete(id=${todo.id})}">??</a>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
+                <a class="btn btn-sm btn-outline-primary" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
+                <a class="btn btn-sm btn-outline-danger" th:href="@{/todos/{id}/delete(id=${todo.id})}">削除</a>
               </td>
             </tr>
             <tr th:if="${#lists.isEmpty(todos)}">
-              <td colspan="5" class="text-center text-muted">ToDo ?????????</td>
+              <td colspan="5" class="text-center text-muted">ToDo はまだありません。</td>
             </tr>
           </tbody>
         </table>
