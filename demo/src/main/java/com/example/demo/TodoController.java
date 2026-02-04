@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.validation.BindingResult;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+import jakarta.validation.Valid;
 
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.TodoService;
@@ -36,7 +40,10 @@ public class TodoController {
 
     // Receive form data and show confirmation.
     @PostMapping("/todos/confirm")
-    public String confirm(@ModelAttribute TodoForm todoForm, Model model) {
+    public String confirm(@Valid @ModelAttribute TodoForm todoForm, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "todo/form";
+        }
         model.addAttribute("todoForm", todoForm);
         return "todo/confirm";
     }
@@ -53,6 +60,29 @@ public class TodoController {
     public String complete(@ModelAttribute TodoForm todoForm, RedirectAttributes redirectAttributes) {
         todoService.createFromForm(todoForm);
         redirectAttributes.addFlashAttribute("successMessage", "登録が完了しました");
+        return "redirect:/todos";
+    }
+
+    @PostMapping("/todos/{id}/update")
+    public String update(
+        @PathVariable Long id,
+        @Valid @ModelAttribute TodoForm todoForm,
+        BindingResult bindingResult,
+        RedirectAttributes redirectAttributes,
+        Model model
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("todoForm", todoForm);
+            return "todo/form";
+        }
+        try {
+            todoService.updateFromForm(id, todoForm);
+        } catch (OptimisticLockingFailureException ex) {
+            model.addAttribute("todoForm", todoForm);
+            model.addAttribute("errorMessage", "他のユーザーにより更新されています。再読み込みしてください。");
+            return "todo/form";
+        }
+        redirectAttributes.addFlashAttribute("successMessage", "更新が完了しました");
         return "redirect:/todos";
     }
 
