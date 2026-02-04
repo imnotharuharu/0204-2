@@ -76,7 +76,8 @@ public class TodoController {
 
     // Show the form for editing a todo by id.
     @GetMapping("/todos/{id}/edit")
-    public String edit(@PathVariable Long id) {
-        return "todo/edit";
+    public String edit(@PathVariable Long id, Model model) {
+        model.addAttribute("todoForm", todoService.getFormForEdit(id));
+        return "todo/form";
     }
 }
