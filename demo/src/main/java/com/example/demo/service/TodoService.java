@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Todo;
 import com.example.demo.form.TodoForm;
+import com.example.demo.service.exception.TodoNotFoundException;
 import com.example.demo.repository.TodoRepository;
 
 @Service
@@ -29,5 +30,12 @@ public class TodoService {
 
     public List<Todo> findAllOrderByCreatedAtDesc() {
         return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    public void deleteById(Long id) {
+        if (!todoRepository.existsById(id)) {
+            throw new TodoNotFoundException(id);
+        }
+        todoRepository.deleteById(id);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.TodoService;
+import com.example.demo.service.exception.TodoNotFoundException;
 
 @Controller
 public class TodoController {
@@ -52,6 +53,18 @@ public class TodoController {
     public String complete(@ModelAttribute TodoForm todoForm, RedirectAttributes redirectAttributes) {
         todoService.createFromForm(todoForm);
         redirectAttributes.addFlashAttribute("successMessage", "登録が完了しました");
+        return "redirect:/todos";
+    }
+
+    // Delete a todo by id.
+    @PostMapping("/todos/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            todoService.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "削除が完了しました");
+        } catch (TodoNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "指定されたToDoが見つかりません");
+        }
         return "redirect:/todos";
     }
 
