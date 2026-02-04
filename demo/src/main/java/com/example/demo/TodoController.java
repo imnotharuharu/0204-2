@@ -19,7 +19,7 @@ public class TodoController {
     // Show the form for creating a new todo.
     @GetMapping("/todos/new")
     public String newTodo() {
-        return "todo/new";
+        return "todo/form";
     }
 
     // Receive form data and show confirmation.
@@ -34,6 +34,21 @@ public class TodoController {
         model.addAttribute("description", description);
         model.addAttribute("priority", priority);
         return "todo/confirm";
+    }
+
+    // Receive hidden fields from confirmation and complete registration.
+    @PostMapping("/todos/complete")
+    public String complete(
+        @RequestParam String title,
+        @RequestParam(required = false) String description,
+        @RequestParam(defaultValue = "3") Integer priority,
+        Model model
+    ) {
+        // In a real app, persist the todo here.
+        model.addAttribute("title", title);
+        model.addAttribute("description", description);
+        model.addAttribute("priority", priority);
+        return "todo/complete";
     }
 
     // Display the details for a single todo by id.
