@@ -74,7 +74,13 @@
                 <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
                 <a class="btn btn-sm btn-outline-primary" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
                 <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" class="d-inline">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('本当に削除しますか？')"
+                  >
+                    削除
+                  </button>
                 </form>
               </td>
             </tr>
