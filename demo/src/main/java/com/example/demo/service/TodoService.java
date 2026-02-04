@@ -1,5 +1,8 @@
 package com.example.demo.service;
 
+import java.util.List;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Todo;
@@ -22,5 +25,9 @@ public class TodoService {
         todo.setPriority(form.getPriority() != null ? form.getPriority() : 1);
         todo.setCompleted(false);
         return todoRepository.save(todo);
+    }
+
+    public List<Todo> findAllOrderByCreatedAtDesc() {
+        return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 }

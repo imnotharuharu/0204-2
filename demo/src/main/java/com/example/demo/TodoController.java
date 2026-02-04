@@ -22,7 +22,8 @@ public class TodoController {
 
     // Display the list of todos.
     @GetMapping("/todos")
-    public String list() {
+    public String list(Model model) {
+        model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
         return "todo/list";
     }
 
