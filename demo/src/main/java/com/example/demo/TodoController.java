@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableDefault;
+import java.util.List;
 
 import jakarta.validation.Valid;
 
@@ -173,6 +174,17 @@ public class TodoController {
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
         }
+        return "redirect:/todos";
+    }
+
+    @PostMapping("/todos/bulk-delete")
+    public String bulkDelete(@RequestParam(required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "削除する項目が選択されていません");
+            return "redirect:/todos";
+        }
+        todoService.deleteAllByIds(ids);
+        redirectAttributes.addFlashAttribute("successMessage", "選択したToDoを削除しました");
         return "redirect:/todos";
     }
 

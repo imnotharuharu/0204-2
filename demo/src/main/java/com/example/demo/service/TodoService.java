@@ -121,4 +121,8 @@ public class TodoService {
         todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
         todoRepository.save(todo);
     }
+
+    public void deleteAllByIds(List<Long> ids) {
+        todoRepository.deleteAllByIdInBatch(ids);
+    }
 }
