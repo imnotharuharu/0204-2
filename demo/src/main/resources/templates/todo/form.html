@@ -115,6 +115,27 @@
           <a class="btn btn-secondary" th:href="@{/todos}">戻る</a>
         </div>
       </form>
+
+      <div class="mt-4" th:if="${todoForm != null and todoForm.id != null}">
+        <h3 class="h6 mb-2">添付ファイル</h3>
+        <form th:action="@{/todos/{id}/attachments(id=${todoForm.id})}" method="post" enctype="multipart/form-data" class="d-flex gap-2 mb-3">
+          <input type="file" class="form-control" name="file" required />
+          <button type="submit" class="btn btn-outline-primary">アップロード</button>
+        </form>
+
+        <div th:if="${attachments != null and !#lists.isEmpty(attachments)}" class="list-group">
+          <div class="list-group-item d-flex justify-content-between align-items-center" th:each="att : ${attachments}">
+            <div>
+              <a th:href="@{/todos/attachments/{id}(id=${att.id})}" th:text="${att.originalFilename}">file</a>
+              <span class="text-muted small ms-2" th:text="${att.size} + ' bytes'">0 bytes</span>
+            </div>
+            <form th:action="@{/todos/attachments/{id}/delete(id=${att.id})}" method="post" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('削除しますか？')">削除</button>
+            </form>
+          </div>
+        </div>
+        <div th:if="${attachments == null or #lists.isEmpty(attachments)}" class="text-muted small">添付ファイルはありません。</div>
+      </div>
     </main>
   </body>
 </html>

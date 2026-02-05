@@ -21,20 +21,24 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
 import java.util.List;
 
 import com.example.demo.entity.Todo;
 import com.example.demo.entity.AppUser;
+import com.example.demo.entity.TodoAttachment;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.TodoAttachmentRepository;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.TodoService;
+import com.example.demo.service.FileStorageService;
 import com.example.demo.service.exception.TodoNotFoundException;
 
 @Controller
@@ -43,11 +47,21 @@ public class TodoController {
     private final TodoService todoService;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final TodoAttachmentRepository todoAttachmentRepository;
+    private final FileStorageService fileStorageService;
 
-    public TodoController(TodoService todoService, CategoryRepository categoryRepository, UserRepository userRepository) {
+    public TodoController(
+        TodoService todoService,
+        CategoryRepository categoryRepository,
+        UserRepository userRepository,
+        TodoAttachmentRepository todoAttachmentRepository,
+        FileStorageService fileStorageService
+    ) {
         this.todoService = todoService;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.todoAttachmentRepository = todoAttachmentRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     // Display the list of todos.
@@ -244,6 +258,58 @@ public class TodoController {
         return ResponseEntity.ok().headers(headers).body(csv);
     }
 
+    @PostMapping("/todos/{id}/attachments")
+    public String uploadAttachment(
+        @PathVariable Long id,
+        @RequestParam("file") MultipartFile file,
+        @AuthenticationPrincipal UserDetails userDetails,
+        RedirectAttributes redirectAttributes
+    ) {
+        AppUser user = getCurrentUser(userDetails);
+        Todo todo = todoService.getOwnedTodo(id, user.getId(), isAdmin(user));
+        FileStorageService.StoredFile stored = fileStorageService.store(file);
+        TodoAttachment attachment = TodoAttachment.builder()
+            .todo(todo)
+            .originalFilename(stored.originalFilename())
+            .storedFilename(stored.storedFilename())
+            .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
+            .size(file.getSize())
+            .build();
+        todoAttachmentRepository.save(attachment);
+        redirectAttributes.addFlashAttribute("successMessage", "ファイルをアップロードしました");
+        return "redirect:/todos/" + id + "/edit";
+    }
+
+    @GetMapping("/todos/attachments/{attachmentId}")
+    public ResponseEntity<Resource> downloadAttachment(
+        @PathVariable Long attachmentId,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        AppUser user = getCurrentUser(userDetails);
+        TodoAttachment attachment = todoAttachmentRepository.findById(attachmentId).orElseThrow();
+        todoService.getOwnedTodo(attachment.getTodo().getId(), user.getId(), isAdmin(user));
+        Resource resource = fileStorageService.loadAsResource(attachment.getStoredFilename());
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(attachment.getContentType()))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getOriginalFilename() + "\"")
+            .body(resource);
+    }
+
+    @PostMapping("/todos/attachments/{attachmentId}/delete")
+    public String deleteAttachment(
+        @PathVariable Long attachmentId,
+        @AuthenticationPrincipal UserDetails userDetails,
+        RedirectAttributes redirectAttributes
+    ) {
+        AppUser user = getCurrentUser(userDetails);
+        TodoAttachment attachment = todoAttachmentRepository.findById(attachmentId).orElseThrow();
+        todoService.getOwnedTodo(attachment.getTodo().getId(), user.getId(), isAdmin(user));
+        fileStorageService.delete(attachment.getStoredFilename());
+        todoAttachmentRepository.delete(attachment);
+        redirectAttributes.addFlashAttribute("successMessage", "添付ファイルを削除しました");
+        return "redirect:/todos/" + attachment.getTodo().getId() + "/edit";
+    }
+
     private byte[] buildCsv(List<Todo> todos) {
         StringBuilder sb = new StringBuilder();
         sb.append("ID,タイトル,登録者,ステータス,作成日\r\n");
@@ -291,6 +357,7 @@ public class TodoController {
         AppUser user = getCurrentUser(userDetails);
         model.addAttribute("todoForm", todoService.getFormForEdit(id, user.getId(), isAdmin(user)));
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
+        model.addAttribute("attachments", todoAttachmentRepository.findByTodoId(id));
         return "todo/form";
     }
 
