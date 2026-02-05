@@ -102,7 +102,16 @@
                 </a>
               </th>
               <th scope="col">期限日</th>
-              <th scope="col">優先度</th>
+              <th scope="col">
+                <a
+                  class="link-dark text-decoration-none"
+                  th:href="@{/todos(sort='priority', direction=${(sort == 'priority' and direction == 'asc') ? 'desc' : 'asc'}, keyword=${keyword})}"
+                >
+                  優先度
+                  <span th:if="${sort == 'priority' and direction == 'asc'}">▲</span>
+                  <span th:if="${sort == 'priority' and direction == 'desc'}">▼</span>
+                </a>
+              </th>
               <th scope="col">
                 <a
                   class="link-dark text-decoration-none"
@@ -132,10 +141,13 @@
                 >
               </td>
               <td>
-                <span th:if="${todo.priority != null}">
-                  <span th:each="i : ${#numbers.sequence(1, todo.priority)}">★</span>
+                <span
+                  class="badge"
+                  th:classappend="${todo.priority != null} ? ' ' + ${todo.priority.badgeClass} : ''"
+                  th:text="${todo.priority != null} ? ${todo.priority.label} : '未設定'"
+                >
+                  中
                 </span>
-                <span th:if="${todo.priority == null}" class="text-muted">-</span>
               </td>
               <td>
                 <!-- Non-ajax (standard) toggle -->

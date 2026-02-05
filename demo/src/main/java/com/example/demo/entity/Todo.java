@@ -12,6 +12,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,9 +40,10 @@ public class Todo {
 
     private LocalDate dueDate;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
     @Builder.Default
-    private Integer priority = 1;
+    private Priority priority = Priority.MEDIUM;
 
     @Column(nullable = false)
     @Builder.Default

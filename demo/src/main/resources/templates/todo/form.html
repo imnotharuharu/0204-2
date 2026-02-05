@@ -72,12 +72,16 @@
         <div class="mb-3">
           <label for="priority" class="form-label">優先度</label>
           <select class="form-select" id="priority" name="priority">
-            <option value="1" th:selected="${todoForm == null or todoForm.priority == null or todoForm.priority == 1}">1</option>
-            <option value="2" th:selected="${todoForm != null and todoForm.priority == 2}">2</option>
-            <option value="3" th:selected="${todoForm != null and todoForm.priority == 3}">3</option>
-            <option value="4" th:selected="${todoForm != null and todoForm.priority == 4}">4</option>
-            <option value="5" th:selected="${todoForm != null and todoForm.priority == 5}">5</option>
+            <option
+              th:each="p : ${T(com.example.demo.entity.Priority).values()}"
+              th:value="${p}"
+              th:text="${p.label}"
+              th:selected="${todoForm != null and todoForm.priority == p}"
+            >
+              中
+            </option>
           </select>
+          <div class="text-danger small mt-1" th:if="${#fields.hasErrors('priority')}" th:errors="*{priority}"></div>
         </div>
 
         <div class="d-flex gap-2">

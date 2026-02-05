@@ -36,7 +36,7 @@
 
         <div class="mb-3">
           <label class="form-label">優先度</label>
-          <input type="text" class="form-control" th:value="${todoForm.priority}" readonly />
+          <input type="text" class="form-control" th:value="${todoForm.priority.label}" readonly />
           <input type="hidden" name="priority" th:value="${todoForm.priority}" />
         </div>
 

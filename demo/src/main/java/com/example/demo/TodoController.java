@@ -70,7 +70,7 @@ public class TodoController {
     }
 
     private String resolveSortKey(String sort) {
-        if ("title".equals(sort) || "completed".equals(sort) || "createdAt".equals(sort)) {
+        if ("title".equals(sort) || "completed".equals(sort) || "createdAt".equals(sort) || "priority".equals(sort)) {
             return sort;
         }
         return "createdAt";

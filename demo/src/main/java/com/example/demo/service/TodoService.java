@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Todo;
+import com.example.demo.entity.Priority;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.exception.TodoNotFoundException;
 import com.example.demo.repository.TodoRepository;
@@ -25,7 +26,7 @@ public class TodoService {
         Todo todo = new Todo();
         todo.setTitle(form.getTitle());
         todo.setDescription(form.getDetail());
-        todo.setPriority(form.getPriority() != null ? form.getPriority() : 1);
+        todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
         todo.setCompleted(false);
         return todoRepository.save(todo);
     }
@@ -76,7 +77,7 @@ public class TodoService {
         Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
         todo.setTitle(form.getTitle());
         todo.setDescription(form.getDetail());
-        todo.setPriority(form.getPriority() != null ? form.getPriority() : 1);
+        todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
         // optimistic lock: set version from the form
         todo.setVersion(form.getVersion());
         todoRepository.save(todo);

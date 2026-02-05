@@ -1,11 +1,12 @@
 package com.example.demo.form;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import lombok.Data;
+
+import com.example.demo.entity.Priority;
 
 @Data
 public class TodoForm {
@@ -25,7 +26,6 @@ public class TodoForm {
     @Size(max = 500)
     private String detail;
 
-    @Min(1)
-    @Max(5)
-    private Integer priority;
+    @NotNull
+    private Priority priority = Priority.MEDIUM;
 }
