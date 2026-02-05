@@ -32,4 +32,8 @@ public class AppUser {
 
     @Column(nullable = false, length = 20)
     private String role;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
 }

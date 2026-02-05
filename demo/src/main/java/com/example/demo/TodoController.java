@@ -1,4 +1,4 @@
-﻿package com.example.demo;
+package com.example.demo;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -63,6 +63,7 @@ public class TodoController {
     ) {
         AppUser user = getCurrentUser(userDetails);
         Long userId = user.getId();
+        boolean isAdmin = isAdmin(user);
 
         String sortKey = resolveSortKey(sort);
         Sort.Direction dir = resolveDirection(direction);
@@ -71,9 +72,9 @@ public class TodoController {
         Page<Todo> page;
 
         if (keyword != null && !keyword.isBlank()) {
-            page = todoService.searchByTitle(keyword, request, categoryId, userId);
+            page = todoService.searchByTitle(keyword, request, categoryId, userId, isAdmin);
         } else {
-            page = todoService.findAll(request, categoryId, userId);
+            page = todoService.findAll(request, categoryId, userId, isAdmin);
         }
 
         long total = page.getTotalElements();
@@ -166,7 +167,7 @@ public class TodoController {
         }
         try {
             AppUser user = getCurrentUser(userDetails);
-            todoService.updateFromForm(id, todoForm, user.getId());
+            todoService.updateFromForm(id, todoForm, user.getId(), isAdmin(user));
         } catch (OptimisticLockingFailureException ex) {
             model.addAttribute("todoForm", todoForm);
             model.addAttribute("errorMessage", "他のユーザーにより更新されています。再読み込みしてください。");
@@ -182,7 +183,7 @@ public class TodoController {
     public String toggle(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         try {
             AppUser user = getCurrentUser(userDetails);
-            todoService.toggleCompleted(id, user.getId());
+            todoService.toggleCompleted(id, user.getId(), isAdmin(user));
             redirectAttributes.addFlashAttribute("successMessage", "完了状態を更新しました");
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "指定されたToDoが見つかりません");
@@ -195,7 +196,7 @@ public class TodoController {
     public String delete(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         try {
             AppUser user = getCurrentUser(userDetails);
-            todoService.deleteById(id, user.getId());
+            todoService.deleteById(id, user.getId(), isAdmin(user));
             redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
@@ -207,7 +208,7 @@ public class TodoController {
     public String deleteById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         try {
             AppUser user = getCurrentUser(userDetails);
-            todoService.deleteById(id, user.getId());
+            todoService.deleteById(id, user.getId(), isAdmin(user));
             redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
@@ -222,7 +223,7 @@ public class TodoController {
             return "redirect:/todos";
         }
         AppUser user = getCurrentUser(userDetails);
-        todoService.deleteAllByIds(ids, user.getId());
+        todoService.deleteAllByIds(ids, user.getId(), isAdmin(user));
         redirectAttributes.addFlashAttribute("successMessage", "選択したToDoを削除しました");
         return "redirect:/todos";
     }
@@ -230,7 +231,9 @@ public class TodoController {
     @GetMapping({"/todo/export", "/todos/export"})
     public ResponseEntity<byte[]> exportCsv(@AuthenticationPrincipal UserDetails userDetails) {
         AppUser user = getCurrentUser(userDetails);
-        List<Todo> todos = todoService.findAllByUserId(user.getId(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Todo> todos = isAdmin(user)
+            ? todoService.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+            : todoService.findAllByUserId(user.getId(), Sort.by(Sort.Direction.DESC, "createdAt"));
         byte[] csv = buildCsv(todos);
 
         String filename = "todo_" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE) + ".csv";
@@ -278,7 +281,7 @@ public class TodoController {
     @GetMapping("/todos/{id}")
     public String detail(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         AppUser user = getCurrentUser(userDetails);
-        todoService.getOwnedTodo(id, user.getId());
+        todoService.getOwnedTodo(id, user.getId(), isAdmin(user));
         return "todo/detail";
     }
 
@@ -286,7 +289,7 @@ public class TodoController {
     @GetMapping("/todos/{id}/edit")
     public String edit(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, Model model) {
         AppUser user = getCurrentUser(userDetails);
-        model.addAttribute("todoForm", todoService.getFormForEdit(id, user.getId()));
+        model.addAttribute("todoForm", todoService.getFormForEdit(id, user.getId(), isAdmin(user)));
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         return "todo/form";
     }
@@ -294,5 +297,9 @@ public class TodoController {
     private AppUser getCurrentUser(UserDetails userDetails) {
         return userRepository.findByUsername(userDetails.getUsername())
             .orElseThrow(() -> new IllegalStateException("User not found"));
+    }
+
+    private boolean isAdmin(AppUser user) {
+        return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
     }
 }

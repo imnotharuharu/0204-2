@@ -1,4 +1,4 @@
-﻿package com.example.demo.service;
+package com.example.demo.service;
 
 import java.util.List;
 
@@ -42,14 +42,26 @@ public class TodoService {
         return todoRepository.save(todo);
     }
 
-    public Page<Todo> findAll(Pageable pageable, Long categoryId, Long userId) {
+    public Page<Todo> findAll(Pageable pageable, Long categoryId, Long userId, boolean isAdmin) {
+        if (isAdmin) {
+            if (categoryId == null) {
+                return todoRepository.findAll(pageable);
+            }
+            return todoRepository.findByCategoryId(categoryId, pageable);
+        }
         if (categoryId == null) {
             return todoRepository.findByUserId(userId, pageable);
         }
         return todoRepository.findByUserIdAndCategoryId(userId, categoryId, pageable);
     }
 
-    public Page<Todo> searchByTitle(String keyword, Pageable pageable, Long categoryId, Long userId) {
+    public Page<Todo> searchByTitle(String keyword, Pageable pageable, Long categoryId, Long userId, boolean isAdmin) {
+        if (isAdmin) {
+            if (categoryId == null) {
+                return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+            }
+            return todoRepository.findByTitleContainingIgnoreCaseAndCategoryId(keyword, categoryId, pageable);
+        }
         if (categoryId == null) {
             return todoRepository.findByUserIdAndTitleContainingIgnoreCase(userId, keyword, pageable);
         }
@@ -60,8 +72,12 @@ public class TodoService {
         return todoRepository.findAllByUserId(userId, sort);
     }
 
-    public TodoForm getFormForEdit(Long id, Long userId) {
-        Todo todo = getOwnedTodo(id, userId);
+    public List<Todo> findAll(Sort sort) {
+        return todoRepository.findAll(sort);
+    }
+
+    public TodoForm getFormForEdit(Long id, Long userId, boolean isAdmin) {
+        Todo todo = getOwnedTodo(id, userId, isAdmin);
         TodoForm form = new TodoForm();
         form.setId(todo.getId());
         form.setVersion(todo.getVersion());
@@ -74,8 +90,8 @@ public class TodoService {
         return form;
     }
 
-    public void updateFromForm(Long id, TodoForm form, Long userId) {
-        Todo todo = getOwnedTodo(id, userId);
+    public void updateFromForm(Long id, TodoForm form, Long userId, boolean isAdmin) {
+        Todo todo = getOwnedTodo(id, userId, isAdmin);
         todo.setTitle(form.getTitle());
         todo.setAuthor(form.getAuthor());
         todo.setDescription(form.getDetail());
@@ -87,25 +103,29 @@ public class TodoService {
         todoRepository.save(todo);
     }
 
-    public void deleteById(Long id, Long userId) {
-        Todo todo = getOwnedTodo(id, userId);
+    public void deleteById(Long id, Long userId, boolean isAdmin) {
+        Todo todo = getOwnedTodo(id, userId, isAdmin);
         todoRepository.deleteById(todo.getId());
     }
 
-    public void toggleCompleted(Long id, Long userId) {
-        Todo todo = getOwnedTodo(id, userId);
+    public void toggleCompleted(Long id, Long userId, boolean isAdmin) {
+        Todo todo = getOwnedTodo(id, userId, isAdmin);
         todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
         todoRepository.save(todo);
     }
 
-    public void deleteAllByIds(List<Long> ids, Long userId) {
+    public void deleteAllByIds(List<Long> ids, Long userId, boolean isAdmin) {
+        if (isAdmin) {
+            todoRepository.deleteAllByIdInBatch(ids);
+            return;
+        }
         List<Todo> owned = todoRepository.findByIdInAndUserId(ids, userId);
         todoRepository.deleteAllInBatch(owned);
     }
 
-    public Todo getOwnedTodo(Long id, Long userId) {
+    public Todo getOwnedTodo(Long id, Long userId, boolean isAdmin) {
         Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
-        if (todo.getUser() == null || !todo.getUser().getId().equals(userId)) {
+        if (!isAdmin && (todo.getUser() == null || !todo.getUser().getId().equals(userId))) {
             throw new TodoAccessDeniedException();
         }
         return todo;
