@@ -22,7 +22,7 @@ public class TodoService {
     public Todo createFromForm(TodoForm form) {
         Todo todo = new Todo();
         todo.setTitle(form.getTitle());
-        todo.setDescription(form.getDescription());
+        todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : 1);
         todo.setCompleted(false);
         return todoRepository.save(todo);
@@ -45,7 +45,7 @@ public class TodoService {
         form.setId(todo.getId());
         form.setVersion(todo.getVersion());
         form.setTitle(todo.getTitle());
-        form.setDescription(todo.getDescription());
+        form.setDetail(todo.getDescription());
         form.setPriority(todo.getPriority());
         return form;
     }
@@ -53,7 +53,7 @@ public class TodoService {
     public void updateFromForm(Long id, TodoForm form) {
         Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
         todo.setTitle(form.getTitle());
-        todo.setDescription(form.getDescription());
+        todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : 1);
         // optimistic lock: set version from the form
         todo.setVersion(form.getVersion());

@@ -23,11 +23,25 @@
 
       <form
         th:action="${todoForm != null and todoForm.id != null} ? @{/todos/{id}/update(id=${todoForm.id})} : @{/todos/confirm}"
+        th:object="${todoForm}"
         method="post"
         class="card p-4 shadow-sm"
       >
         <input type="hidden" name="id" th:value="${todoForm != null} ? ${todoForm.id} : ''" />
         <input type="hidden" name="version" th:value="${todoForm != null} ? ${todoForm.version} : ''" />
+        <div class="mb-3">
+          <label for="author" class="form-label">作成者</label>
+          <input
+            type="text"
+            class="form-control"
+            id="author"
+            name="author"
+            required
+            placeholder="例: 山田 太郎"
+            th:value="${todoForm != null} ? ${todoForm.author} : ''"
+          />
+          <div class="text-danger small mt-1" th:if="${#fields.hasErrors('author')}" th:errors="*{author}"></div>
+        </div>
         <div class="mb-3">
           <label for="title" class="form-label">タイトル</label>
           <input
@@ -39,18 +53,20 @@
             placeholder="例: レポート提出"
             th:value="${todoForm != null} ? ${todoForm.title} : ''"
           />
+          <div class="text-danger small mt-1" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
         </div>
 
         <div class="mb-3">
-          <label for="description" class="form-label">説明</label>
+          <label for="detail" class="form-label">詳細</label>
           <textarea
             class="form-control"
-            id="description"
-            name="description"
+            id="detail"
+            name="detail"
             rows="4"
             placeholder="任意"
-            th:text="${todoForm != null} ? ${todoForm.description} : ''"
+            th:text="${todoForm != null} ? ${todoForm.detail} : ''"
           ></textarea>
+          <div class="text-danger small mt-1" th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
         </div>
 
         <div class="mb-3">

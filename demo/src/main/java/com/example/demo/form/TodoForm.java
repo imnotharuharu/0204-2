@@ -15,11 +15,15 @@ public class TodoForm {
     private Long version;
 
     @NotBlank
+    @Size(max = 50)
+    private String author;
+
+    @NotBlank
     @Size(max = 100)
     private String title;
 
     @Size(max = 500)
-    private String description;
+    private String detail;
 
     @Min(1)
     @Max(5)

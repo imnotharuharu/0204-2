@@ -34,7 +34,8 @@ public class TodoController {
 
     // Show the form for creating a new todo.
     @GetMapping("/todos/new")
-    public String newTodo() {
+    public String newTodo(Model model) {
+        model.addAttribute("todoForm", new TodoForm());
         return "todo/form";
     }
 
