@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ToDo 確認</title>
+    <title th:text="#{confirm.title}">ToDo 確認</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -14,55 +14,55 @@
   <body class="bg-light">
     <header class="bg-dark text-white py-3 mb-4">
       <div class="container">
-        <h1 class="h3 mb-0">ToDo App</h1>
+        <h1 class="h3 mb-0" th:text="#{app.title}">ToDo App</h1>
       </div>
     </header>
 
     <main class="container">
-      <h2 class="h4 mb-3">ToDo 確認</h2>
+      <h2 class="h4 mb-3" th:text="#{confirm.title}">ToDo 確認</h2>
 
       <form th:action="@{/todos/complete}" method="post" class="card p-4 shadow-sm">
         <div class="mb-3">
-          <label class="form-label">作成者</label>
+          <label class="form-label" th:text="#{form.author}">作成者</label>
           <input type="text" class="form-control" th:value="${todoForm.author}" readonly />
           <input type="hidden" name="author" th:value="${todoForm.author}" />
         </div>
         <div class="mb-3">
-          <label class="form-label">タイトル</label>
+          <label class="form-label" th:text="#{form.title.label}">タイトル</label>
           <input type="text" class="form-control" th:value="${todoForm.title}" readonly />
           <input type="hidden" name="title" th:value="${todoForm.title}" />
         </div>
 
         <div class="mb-3">
-          <label class="form-label">詳細</label>
+          <label class="form-label" th:text="#{form.detail}">詳細</label>
           <textarea class="form-control" rows="4" readonly th:text="${todoForm.detail}"></textarea>
           <input type="hidden" name="detail" th:value="${todoForm.detail}" />
         </div>
 
         <div class="mb-3">
-          <label class="form-label">優先度</label>
+          <label class="form-label" th:text="#{form.priority}">優先度</label>
           <input type="text" class="form-control" th:value="${todoForm.priority.label}" readonly />
           <input type="hidden" name="priority" th:value="${todoForm.priority}" />
         </div>
         <div class="mb-3">
-          <label class="form-label">カテゴリ</label>
-          <input type="text" class="form-control" th:value="${category != null} ? ${category.name} : '未選択'" readonly />
+          <label class="form-label" th:text="#{confirm.category}">カテゴリ</label>
+          <input type="text" class="form-control" th:value="${category != null} ? ${category.name} : #{category.unset}" readonly />
           <input type="hidden" name="categoryId" th:value="${todoForm.categoryId}" />
         </div>
         <div class="mb-3">
-          <label class="form-label">期限日</label>
+          <label class="form-label" th:text="#{confirm.deadline}">期限日</label>
           <input
             type="text"
             class="form-control"
-            th:value="${todoForm.deadline != null} ? ${#temporals.format(todoForm.deadline, 'yyyy/MM/dd')} : '未設定'"
+            th:value="${todoForm.deadline != null} ? ${#temporals.format(todoForm.deadline, 'yyyy/MM/dd')} : #{priority.unset}"
             readonly
           />
           <input type="hidden" name="deadline" th:value="${todoForm.deadline}" />
         </div>
 
         <div class="d-flex gap-2">
-          <button type="button" class="btn btn-secondary" onclick="history.back()">戻る</button>
-          <button type="submit" class="btn btn-primary">登録</button>
+          <button type="button" class="btn btn-secondary" onclick="history.back()" th:text="#{form.back}">戻る</button>
+          <button type="submit" class="btn btn-primary" th:text="#{confirm.submit}">登録</button>
         </div>
       </form>
     </main>

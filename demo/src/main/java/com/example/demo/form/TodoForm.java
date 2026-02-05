@@ -17,18 +17,18 @@ public class TodoForm {
 
     private Long version;
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank(message = "{validation.notblank}")
+    @Size(max = 50, message = "{validation.size50}")
     private String author;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "{validation.notblank}")
+    @Size(max = 100, message = "{validation.size100}")
     private String title;
 
-    @Size(max = 500)
+    @Size(max = 500, message = "{validation.size500}")
     private String detail;
 
-    @NotNull
+    @NotNull(message = "{validation.notnull}")
     private Priority priority = Priority.MEDIUM;
 
     private Long categoryId;
