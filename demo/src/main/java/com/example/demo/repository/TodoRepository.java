@@ -23,6 +23,9 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     // Sort by priority (ascending).
     List<Todo> findAllByOrderByPriorityAsc();
 
+    // Title partial match (case-insensitive) with createdAt desc.
+    List<Todo> findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(String keyword);
+
     // Example @Query: title partial match using JPQL.
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Todo> searchByTitle(@Param("keyword") String keyword);

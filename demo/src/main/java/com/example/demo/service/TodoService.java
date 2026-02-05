@@ -32,6 +32,10 @@ public class TodoService {
         return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
+    public List<Todo> searchByTitleOrderByCreatedAtDesc(String keyword) {
+        return todoRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword);
+    }
+
     public void deleteById(Long id) {
         if (!todoRepository.existsById(id)) {
             throw new TodoNotFoundException(id);

@@ -27,8 +27,16 @@ public class TodoController {
 
     // Display the list of todos.
     @GetMapping("/todos")
-    public String list(Model model) {
-        model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
+    public String list(
+        @RequestParam(required = false) String keyword,
+        Model model
+    ) {
+        if (keyword != null && !keyword.isBlank()) {
+            model.addAttribute("todos", todoService.searchByTitleOrderByCreatedAtDesc(keyword));
+        } else {
+            model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
+        }
+        model.addAttribute("keyword", keyword);
         return "todo/list";
     }
 

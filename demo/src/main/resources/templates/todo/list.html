@@ -36,6 +36,27 @@
         削除に失敗しました
       </div>
 
+      <form class="row g-2 mb-3" th:action="@{/todos}" method="get">
+        <div class="col-sm-8 col-md-6">
+          <input
+            type="text"
+            class="form-control"
+            name="keyword"
+            placeholder="タイトルで検索"
+            th:value="${keyword}"
+          />
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-outline-primary">検索</button>
+        </div>
+        <div class="col-auto">
+          <a class="btn btn-outline-secondary" th:href="@{/todos}">クリア</a>
+        </div>
+        <div class="col-12 text-muted small mt-1" th:if="${keyword != null and !#strings.isEmpty(keyword)}">
+          検索結果: <span th:text="${#lists.size(todos)}">0</span> 件
+        </div>
+      </form>
+
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h4 mb-0">ToDo 一覧</h2>
         <a class="btn btn-primary" th:href="@{/todos/new}">新規作成</a>
