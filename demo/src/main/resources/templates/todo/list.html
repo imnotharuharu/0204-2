@@ -142,6 +142,7 @@
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary" th:href="@{/todos/{id}(id=${todo.id})}">詳細</a>
                 <a class="btn btn-sm btn-outline-primary" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a>
+                <!-- Step 1: confirm() -->
                 <form th:action="@{/todos/{id}/delete(id=${todo.id})}" method="post" class="d-inline">
                   <button
                     type="submit"
@@ -151,10 +152,43 @@
                     削除
                   </button>
                 </form>
+                <!-- Step 2: modal trigger (optional) -->
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger ms-1"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                  th:attr="data-id=${todo.id},data-title=${todo.title}"
+                >
+                  モーダル削除
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <!-- Step 2: delete modal -->
+      <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">削除確認</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="mb-0">
+                「<span id="deleteModalTitle"></span>」を本当に削除しますか？
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+              <form id="deleteModalForm" method="post">
+                <input type="hidden" name="_method" value="delete" />
+                <button type="submit" class="btn btn-danger">削除する</button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -190,6 +224,19 @@
           alert.classList.add("hide");
         }, 3000);
       });
+
+      const deleteModal = document.getElementById("deleteModal");
+      if (deleteModal) {
+        deleteModal.addEventListener("show.bs.modal", (event) => {
+          const button = event.relatedTarget;
+          const id = button.getAttribute("data-id");
+          const title = button.getAttribute("data-title");
+          const titleSpan = document.getElementById("deleteModalTitle");
+          const form = document.getElementById("deleteModalForm");
+          titleSpan.textContent = title || "";
+          form.action = `/todos/${id}`;
+        });
+      }
     </script>
   </body>
 </html>

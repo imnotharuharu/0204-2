@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -134,6 +135,17 @@ public class TodoController {
     // Delete a todo by id.
     @PostMapping("/todos/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            todoService.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
+        } catch (TodoNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
+        }
+        return "redirect:/todos";
+    }
+
+    @DeleteMapping("/todos/{id}")
+    public String deleteById(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             todoService.deleteById(id);
             redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
