@@ -103,6 +103,20 @@ public class TodoService {
         todoRepository.save(todo);
     }
 
+    public Todo updateFromApi(Long id, String title, String author, String detail, Priority priority, java.time.LocalDate deadline, Long categoryId, Boolean completed, Long userId, boolean isAdmin) {
+        Todo todo = getOwnedTodo(id, userId, isAdmin);
+        todo.setTitle(title);
+        todo.setAuthor(author);
+        todo.setDescription(detail);
+        todo.setPriority(priority != null ? priority : Priority.MEDIUM);
+        todo.setDeadline(deadline);
+        todo.setCategory(resolveCategory(categoryId));
+        if (completed != null) {
+            todo.setCompleted(completed);
+        }
+        return todoRepository.save(todo);
+    }
+
     public void deleteById(Long id, Long userId, boolean isAdmin) {
         Todo todo = getOwnedTodo(id, userId, isAdmin);
         todoRepository.deleteById(todo.getId());
