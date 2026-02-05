@@ -1,4 +1,4 @@
-package com.example.demo;
+﻿package com.example.demo;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,9 +17,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableDefault;
 
-import com.example.demo.entity.Todo;
 import jakarta.validation.Valid;
 
+import com.example.demo.entity.Todo;
+import com.example.demo.repository.CategoryRepository;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.TodoService;
 import com.example.demo.service.exception.TodoNotFoundException;
@@ -28,9 +29,11 @@ import com.example.demo.service.exception.TodoNotFoundException;
 public class TodoController {
 
     private final TodoService todoService;
+    private final CategoryRepository categoryRepository;
 
-    public TodoController(TodoService todoService) {
+    public TodoController(TodoService todoService, CategoryRepository categoryRepository) {
         this.todoService = todoService;
+        this.categoryRepository = categoryRepository;
     }
 
     // Display the list of todos.
@@ -39,6 +42,7 @@ public class TodoController {
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String sort,
         @RequestParam(required = false) String direction,
+        @RequestParam(required = false) Long categoryId,
         @PageableDefault(size = 10) Pageable pageable,
         Model model
     ) {
@@ -49,9 +53,9 @@ public class TodoController {
         Page<Todo> page;
 
         if (keyword != null && !keyword.isBlank()) {
-            page = todoService.searchByTitle(keyword, request);
+            page = todoService.searchByTitle(keyword, request, categoryId);
         } else {
-            page = todoService.findAll(request);
+            page = todoService.findAll(request, categoryId);
         }
 
         long total = page.getTotalElements();
@@ -63,6 +67,8 @@ public class TodoController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sortKey);
         model.addAttribute("direction", dir.name().toLowerCase());
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         model.addAttribute("rangeStart", start);
         model.addAttribute("rangeEnd", end);
         model.addAttribute("totalElements", total);
@@ -87,6 +93,7 @@ public class TodoController {
     @GetMapping("/todos/new")
     public String newTodo(Model model) {
         model.addAttribute("todoForm", new TodoForm());
+        model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         return "todo/form";
     }
 
@@ -94,9 +101,14 @@ public class TodoController {
     @PostMapping("/todos/confirm")
     public String confirm(@Valid @ModelAttribute TodoForm todoForm, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
             return "todo/form";
         }
         model.addAttribute("todoForm", todoForm);
+        if (todoForm.getCategoryId() != null) {
+            categoryRepository.findById(todoForm.getCategoryId())
+                .ifPresent(category -> model.addAttribute("category", category));
+        }
         return "todo/confirm";
     }
 
@@ -125,6 +137,7 @@ public class TodoController {
     ) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("todoForm", todoForm);
+            model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
             return "todo/form";
         }
         try {
@@ -132,6 +145,7 @@ public class TodoController {
         } catch (OptimisticLockingFailureException ex) {
             model.addAttribute("todoForm", todoForm);
             model.addAttribute("errorMessage", "他のユーザーにより更新されています。再読み込みしてください。");
+            model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
             return "todo/form";
         }
         redirectAttributes.addFlashAttribute("successMessage", "更新が完了しました");
@@ -183,6 +197,7 @@ public class TodoController {
     @GetMapping("/todos/{id}/edit")
     public String edit(@PathVariable Long id, Model model) {
         model.addAttribute("todoForm", todoService.getFormForEdit(id));
+        model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         return "todo/form";
     }
 }

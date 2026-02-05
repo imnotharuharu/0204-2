@@ -28,4 +28,6 @@ public class TodoForm {
 
     @NotNull
     private Priority priority = Priority.MEDIUM;
+
+    private Long categoryId;
 }

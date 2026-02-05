@@ -9,17 +9,22 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Todo;
 import com.example.demo.entity.Priority;
+import com.example.demo.entity.Category;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.exception.TodoNotFoundException;
+import com.example.demo.service.exception.CategoryNotFoundException;
 import com.example.demo.repository.TodoRepository;
+import com.example.demo.repository.CategoryRepository;
 
 @Service
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final CategoryRepository categoryRepository;
 
-    public TodoService(TodoRepository todoRepository) {
+    public TodoService(TodoRepository todoRepository, CategoryRepository categoryRepository) {
         this.todoRepository = todoRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public Todo createFromForm(TodoForm form) {
@@ -28,6 +33,7 @@ public class TodoService {
         todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
         todo.setCompleted(false);
+        todo.setCategory(resolveCategory(form.getCategoryId()));
         return todoRepository.save(todo);
     }
 
@@ -70,6 +76,7 @@ public class TodoService {
         form.setTitle(todo.getTitle());
         form.setDetail(todo.getDescription());
         form.setPriority(todo.getPriority());
+        form.setCategoryId(todo.getCategory() != null ? todo.getCategory().getId() : null);
         return form;
     }
 
@@ -78,9 +85,32 @@ public class TodoService {
         todo.setTitle(form.getTitle());
         todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
+        todo.setCategory(resolveCategory(form.getCategoryId()));
         // optimistic lock: set version from the form
         todo.setVersion(form.getVersion());
         todoRepository.save(todo);
+    }
+
+    public Page<Todo> findAll(Pageable pageable, Long categoryId) {
+        if (categoryId == null) {
+            return todoRepository.findAll(pageable);
+        }
+        return todoRepository.findByCategoryId(categoryId, pageable);
+    }
+
+    public Page<Todo> searchByTitle(String keyword, Pageable pageable, Long categoryId) {
+        if (categoryId == null) {
+            return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+        }
+        return todoRepository.findByTitleContainingIgnoreCaseAndCategoryId(keyword, categoryId, pageable);
+    }
+
+    private Category resolveCategory(Long categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        return categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 
     public void toggleCompleted(Long id) {

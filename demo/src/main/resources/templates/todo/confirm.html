@@ -39,6 +39,11 @@
           <input type="text" class="form-control" th:value="${todoForm.priority.label}" readonly />
           <input type="hidden" name="priority" th:value="${todoForm.priority}" />
         </div>
+        <div class="mb-3">
+          <label class="form-label">カテゴリ</label>
+          <input type="text" class="form-control" th:value="${category != null} ? ${category.name} : '未選択'" readonly />
+          <input type="hidden" name="categoryId" th:value="${todoForm.categoryId}" />
+        </div>
 
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-secondary" onclick="history.back()">戻る</button>

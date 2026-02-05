@@ -35,6 +35,10 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     // Title partial match (case-insensitive) with Pageable.
     Page<Todo> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 
+    Page<Todo> findByCategoryId(Long categoryId, Pageable pageable);
+
+    Page<Todo> findByTitleContainingIgnoreCaseAndCategoryId(String keyword, Long categoryId, Pageable pageable);
+
     // Example @Query: title partial match using JPQL.
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Todo> searchByTitle(@Param("keyword") String keyword);
