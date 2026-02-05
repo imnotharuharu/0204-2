@@ -1,4 +1,4 @@
-package com.example.demo.service;
+﻿package com.example.demo.service;
 
 import java.util.List;
 
@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import com.example.demo.entity.Todo;
 import com.example.demo.entity.Priority;
 import com.example.demo.entity.Category;
+import com.example.demo.entity.AppUser;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.exception.TodoNotFoundException;
+import com.example.demo.service.exception.TodoAccessDeniedException;
 import com.example.demo.service.exception.CategoryNotFoundException;
 import com.example.demo.repository.TodoRepository;
 import com.example.demo.repository.CategoryRepository;
@@ -27,7 +29,7 @@ public class TodoService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Todo createFromForm(TodoForm form) {
+    public Todo createFromForm(TodoForm form, AppUser user) {
         Todo todo = new Todo();
         todo.setTitle(form.getTitle());
         todo.setAuthor(form.getAuthor());
@@ -36,42 +38,30 @@ public class TodoService {
         todo.setCompleted(false);
         todo.setDeadline(form.getDeadline());
         todo.setCategory(resolveCategory(form.getCategoryId()));
+        todo.setUser(user);
         return todoRepository.save(todo);
     }
 
-    public List<Todo> findAllOrderByCreatedAtDesc() {
-        return todoRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
-    }
-
-    public List<Todo> searchByTitleOrderByCreatedAtDesc(String keyword) {
-        return todoRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword);
-    }
-
-    public List<Todo> findAll(Sort sort) {
-        return todoRepository.findAll(sort);
-    }
-
-    public List<Todo> searchByTitle(String keyword, Sort sort) {
-        return todoRepository.findByTitleContainingIgnoreCase(keyword, sort);
-    }
-
-    public Page<Todo> findAll(Pageable pageable) {
-        return todoRepository.findAll(pageable);
-    }
-
-    public Page<Todo> searchByTitle(String keyword, Pageable pageable) {
-        return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
-    }
-
-    public void deleteById(Long id) {
-        if (!todoRepository.existsById(id)) {
-            throw new TodoNotFoundException(id);
+    public Page<Todo> findAll(Pageable pageable, Long categoryId, Long userId) {
+        if (categoryId == null) {
+            return todoRepository.findByUserId(userId, pageable);
         }
-        todoRepository.deleteById(id);
+        return todoRepository.findByUserIdAndCategoryId(userId, categoryId, pageable);
     }
 
-    public TodoForm getFormForEdit(Long id) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+    public Page<Todo> searchByTitle(String keyword, Pageable pageable, Long categoryId, Long userId) {
+        if (categoryId == null) {
+            return todoRepository.findByUserIdAndTitleContainingIgnoreCase(userId, keyword, pageable);
+        }
+        return todoRepository.findByUserIdAndTitleContainingIgnoreCaseAndCategoryId(userId, keyword, categoryId, pageable);
+    }
+
+    public List<Todo> findAllByUserId(Long userId, Sort sort) {
+        return todoRepository.findAllByUserId(userId, sort);
+    }
+
+    public TodoForm getFormForEdit(Long id, Long userId) {
+        Todo todo = getOwnedTodo(id, userId);
         TodoForm form = new TodoForm();
         form.setId(todo.getId());
         form.setVersion(todo.getVersion());
@@ -84,8 +74,8 @@ public class TodoService {
         return form;
     }
 
-    public void updateFromForm(Long id, TodoForm form) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+    public void updateFromForm(Long id, TodoForm form, Long userId) {
+        Todo todo = getOwnedTodo(id, userId);
         todo.setTitle(form.getTitle());
         todo.setAuthor(form.getAuthor());
         todo.setDescription(form.getDetail());
@@ -97,18 +87,28 @@ public class TodoService {
         todoRepository.save(todo);
     }
 
-    public Page<Todo> findAll(Pageable pageable, Long categoryId) {
-        if (categoryId == null) {
-            return todoRepository.findAll(pageable);
-        }
-        return todoRepository.findByCategoryId(categoryId, pageable);
+    public void deleteById(Long id, Long userId) {
+        Todo todo = getOwnedTodo(id, userId);
+        todoRepository.deleteById(todo.getId());
     }
 
-    public Page<Todo> searchByTitle(String keyword, Pageable pageable, Long categoryId) {
-        if (categoryId == null) {
-            return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+    public void toggleCompleted(Long id, Long userId) {
+        Todo todo = getOwnedTodo(id, userId);
+        todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
+        todoRepository.save(todo);
+    }
+
+    public void deleteAllByIds(List<Long> ids, Long userId) {
+        List<Todo> owned = todoRepository.findByIdInAndUserId(ids, userId);
+        todoRepository.deleteAllInBatch(owned);
+    }
+
+    public Todo getOwnedTodo(Long id, Long userId) {
+        Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+        if (todo.getUser() == null || !todo.getUser().getId().equals(userId)) {
+            throw new TodoAccessDeniedException();
         }
-        return todoRepository.findByTitleContainingIgnoreCaseAndCategoryId(keyword, categoryId, pageable);
+        return todo;
     }
 
     private Category resolveCategory(Long categoryId) {
@@ -117,15 +117,5 @@ public class TodoService {
         }
         return categoryRepository.findById(categoryId)
             .orElseThrow(() -> new CategoryNotFoundException(categoryId));
-    }
-
-    public void toggleCompleted(Long id) {
-        Todo todo = todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
-        todo.setCompleted(!Boolean.TRUE.equals(todo.getCompleted()));
-        todoRepository.save(todo);
-    }
-
-    public void deleteAllByIds(List<Long> ids) {
-        todoRepository.deleteAllByIdInBatch(ids);
     }
 }

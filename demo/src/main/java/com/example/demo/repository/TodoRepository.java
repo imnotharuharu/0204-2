@@ -39,6 +39,20 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     Page<Todo> findByTitleContainingIgnoreCaseAndCategoryId(String keyword, Long categoryId, Pageable pageable);
 
+    Page<Todo> findByUserId(Long userId, Pageable pageable);
+
+    Page<Todo> findByUserIdAndTitleContainingIgnoreCase(Long userId, String keyword, Pageable pageable);
+
+    Page<Todo> findByUserIdAndCategoryId(Long userId, Long categoryId, Pageable pageable);
+
+    Page<Todo> findByUserIdAndTitleContainingIgnoreCaseAndCategoryId(Long userId, String keyword, Long categoryId, Pageable pageable);
+
+    java.util.Optional<Todo> findByIdAndUserId(Long id, Long userId);
+
+    java.util.List<Todo> findAllByUserId(Long userId, Sort sort);
+
+    java.util.List<Todo> findByIdInAndUserId(java.util.List<Long> ids, Long userId);
+
     // Example @Query: title partial match using JPQL.
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Todo> searchByTitle(@Param("keyword") String keyword);

@@ -9,13 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
-import java.util.List;
 import org.springframework.validation.BindingResult;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
@@ -23,12 +16,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableDefault;
-import java.util.List;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.validation.Valid;
 
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.List;
+
 import com.example.demo.entity.Todo;
+import com.example.demo.entity.AppUser;
 import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.form.TodoForm;
 import com.example.demo.service.TodoService;
 import com.example.demo.service.exception.TodoNotFoundException;
@@ -38,10 +42,12 @@ public class TodoController {
 
     private final TodoService todoService;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
-    public TodoController(TodoService todoService, CategoryRepository categoryRepository) {
+    public TodoController(TodoService todoService, CategoryRepository categoryRepository, UserRepository userRepository) {
         this.todoService = todoService;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     // Display the list of todos.
@@ -52,8 +58,12 @@ public class TodoController {
         @RequestParam(required = false) String direction,
         @RequestParam(required = false) Long categoryId,
         @PageableDefault(size = 10) Pageable pageable,
+        @AuthenticationPrincipal UserDetails userDetails,
         Model model
     ) {
+        AppUser user = getCurrentUser(userDetails);
+        Long userId = user.getId();
+
         String sortKey = resolveSortKey(sort);
         Sort.Direction dir = resolveDirection(direction);
         Sort sortSpec = Sort.by(dir, sortKey);
@@ -61,9 +71,9 @@ public class TodoController {
         Page<Todo> page;
 
         if (keyword != null && !keyword.isBlank()) {
-            page = todoService.searchByTitle(keyword, request, categoryId);
+            page = todoService.searchByTitle(keyword, request, categoryId, userId);
         } else {
-            page = todoService.findAll(request, categoryId);
+            page = todoService.findAll(request, categoryId, userId);
         }
 
         long total = page.getTotalElements();
@@ -99,7 +109,7 @@ public class TodoController {
 
     // Show the form for creating a new todo.
     @GetMapping("/todos/new")
-    public String newTodo(Model model) {
+    public String newTodo(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         model.addAttribute("todoForm", new TodoForm());
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         return "todo/form";
@@ -129,8 +139,13 @@ public class TodoController {
 
     // Receive hidden fields from confirmation and complete registration.
     @PostMapping("/todos/complete")
-    public String complete(@ModelAttribute TodoForm todoForm, RedirectAttributes redirectAttributes) {
-        todoService.createFromForm(todoForm);
+    public String complete(
+        @ModelAttribute TodoForm todoForm,
+        @AuthenticationPrincipal UserDetails userDetails,
+        RedirectAttributes redirectAttributes
+    ) {
+        AppUser user = getCurrentUser(userDetails);
+        todoService.createFromForm(todoForm, user);
         redirectAttributes.addFlashAttribute("successMessage", "登録が完了しました");
         return "redirect:/todos";
     }
@@ -140,6 +155,7 @@ public class TodoController {
         @PathVariable Long id,
         @Valid @ModelAttribute TodoForm todoForm,
         BindingResult bindingResult,
+        @AuthenticationPrincipal UserDetails userDetails,
         RedirectAttributes redirectAttributes,
         Model model
     ) {
@@ -149,7 +165,8 @@ public class TodoController {
             return "todo/form";
         }
         try {
-            todoService.updateFromForm(id, todoForm);
+            AppUser user = getCurrentUser(userDetails);
+            todoService.updateFromForm(id, todoForm, user.getId());
         } catch (OptimisticLockingFailureException ex) {
             model.addAttribute("todoForm", todoForm);
             model.addAttribute("errorMessage", "他のユーザーにより更新されています。再読み込みしてください。");
@@ -162,9 +179,10 @@ public class TodoController {
 
     // Toggle completion status.
     @PostMapping("/todos/{id}/toggle")
-    public String toggle(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String toggle(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         try {
-            todoService.toggleCompleted(id);
+            AppUser user = getCurrentUser(userDetails);
+            todoService.toggleCompleted(id, user.getId());
             redirectAttributes.addFlashAttribute("successMessage", "完了状態を更新しました");
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "指定されたToDoが見つかりません");
@@ -174,9 +192,22 @@ public class TodoController {
 
     // Delete a todo by id.
     @PostMapping("/todos/{id}/delete")
-    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String delete(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         try {
-            todoService.deleteById(id);
+            AppUser user = getCurrentUser(userDetails);
+            todoService.deleteById(id, user.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
+        } catch (TodoNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
+        }
+        return "redirect:/todos";
+    }
+
+    @DeleteMapping("/todos/{id}")
+    public String deleteById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
+        try {
+            AppUser user = getCurrentUser(userDetails);
+            todoService.deleteById(id, user.getId());
             redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
         } catch (TodoNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
@@ -185,30 +216,21 @@ public class TodoController {
     }
 
     @PostMapping("/todos/bulk-delete")
-    public String bulkDelete(@RequestParam(required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
+    public String bulkDelete(@RequestParam(required = false) List<Long> ids, @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "削除する項目が選択されていません");
             return "redirect:/todos";
         }
-        todoService.deleteAllByIds(ids);
+        AppUser user = getCurrentUser(userDetails);
+        todoService.deleteAllByIds(ids, user.getId());
         redirectAttributes.addFlashAttribute("successMessage", "選択したToDoを削除しました");
         return "redirect:/todos";
     }
 
-    @DeleteMapping("/todos/{id}")
-    public String deleteById(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            todoService.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "ToDoを削除しました");
-        } catch (TodoNotFoundException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
-        }
-        return "redirect:/todos";
-    }
-
     @GetMapping({"/todo/export", "/todos/export"})
-    public ResponseEntity<byte[]> exportCsv() {
-        List<Todo> todos = todoService.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    public ResponseEntity<byte[]> exportCsv(@AuthenticationPrincipal UserDetails userDetails) {
+        AppUser user = getCurrentUser(userDetails);
+        List<Todo> todos = todoService.findAllByUserId(user.getId(), Sort.by(Sort.Direction.DESC, "createdAt"));
         byte[] csv = buildCsv(todos);
 
         String filename = "todo_" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE) + ".csv";
@@ -254,15 +276,23 @@ public class TodoController {
 
     // Display the details for a single todo by id.
     @GetMapping("/todos/{id}")
-    public String detail(@PathVariable Long id) {
+    public String detail(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        AppUser user = getCurrentUser(userDetails);
+        todoService.getOwnedTodo(id, user.getId());
         return "todo/detail";
     }
 
     // Show the form for editing a todo by id.
     @GetMapping("/todos/{id}/edit")
-    public String edit(@PathVariable Long id, Model model) {
-        model.addAttribute("todoForm", todoService.getFormForEdit(id));
+    public String edit(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, Model model) {
+        AppUser user = getCurrentUser(userDetails);
+        model.addAttribute("todoForm", todoService.getFormForEdit(id, user.getId()));
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("name")));
         return "todo/form";
+    }
+
+    private AppUser getCurrentUser(UserDetails userDetails) {
+        return userRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new IllegalStateException("User not found"));
     }
 }
