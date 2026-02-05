@@ -3,6 +3,8 @@ package com.example.demo.form;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 
 import lombok.Data;
 
@@ -30,4 +32,7 @@ public class TodoForm {
     private Priority priority = Priority.MEDIUM;
 
     private Long categoryId;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate deadline;
 }

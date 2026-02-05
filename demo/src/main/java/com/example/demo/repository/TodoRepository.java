@@ -20,8 +20,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     // Partial match search by title (case-insensitive).
     List<Todo> findByTitleContainingIgnoreCase(String keyword);
 
-    // Due date is today or earlier.
-    List<Todo> findByDueDateLessThanEqual(LocalDate date);
+    // Deadline is today or earlier.
+    List<Todo> findByDeadlineLessThanEqual(LocalDate date);
 
     // Sort by priority (ascending).
     List<Todo> findAllByOrderByPriorityAsc();
@@ -43,7 +43,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Todo> searchByTitle(@Param("keyword") String keyword);
 
-    // Example @Query: due date is today or earlier.
-    @Query("SELECT t FROM Todo t WHERE t.dueDate <= :date")
+    // Example @Query: deadline is today or earlier.
+    @Query("SELECT t FROM Todo t WHERE t.deadline <= :date")
     List<Todo> findOverdue(@Param("date") LocalDate date);
 }

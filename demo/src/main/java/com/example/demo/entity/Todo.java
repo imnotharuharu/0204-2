@@ -40,7 +40,7 @@ public class Todo {
     @Column(length = 500)
     private String description;
 
-    private LocalDate dueDate;
+    private LocalDate deadline;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -63,6 +63,18 @@ public class Todo {
 
     @Version
     private Long version;
+
+    public boolean isOverdue() {
+        return deadline != null && deadline.isBefore(LocalDate.now());
+    }
+
+    public boolean isNearDeadline() {
+        if (deadline == null) {
+            return false;
+        }
+        LocalDate now = LocalDate.now();
+        return !isOverdue() && !deadline.isAfter(now.plusDays(3));
+    }
 
     @PrePersist
     public void prePersist() {

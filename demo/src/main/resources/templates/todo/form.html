@@ -68,6 +68,16 @@
           ></textarea>
           <div class="text-danger small mt-1" th:if="${#fields.hasErrors('detail')}" th:errors="*{detail}"></div>
         </div>
+        <div class="mb-3">
+          <label for="deadline" class="form-label">期限日</label>
+          <input
+            type="date"
+            class="form-control"
+            id="deadline"
+            name="deadline"
+            th:value="${todoForm != null and todoForm.deadline != null} ? ${#temporals.format(todoForm.deadline, 'yyyy-MM-dd')} : ''"
+          />
+        </div>
 
         <div class="mb-3">
           <label for="priority" class="form-label">優先度</label>

@@ -33,6 +33,7 @@ public class TodoService {
         todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
         todo.setCompleted(false);
+        todo.setDeadline(form.getDeadline());
         todo.setCategory(resolveCategory(form.getCategoryId()));
         return todoRepository.save(todo);
     }
@@ -76,6 +77,7 @@ public class TodoService {
         form.setTitle(todo.getTitle());
         form.setDetail(todo.getDescription());
         form.setPriority(todo.getPriority());
+        form.setDeadline(todo.getDeadline());
         form.setCategoryId(todo.getCategory() != null ? todo.getCategory().getId() : null);
         return form;
     }
@@ -85,6 +87,7 @@ public class TodoService {
         todo.setTitle(form.getTitle());
         todo.setDescription(form.getDetail());
         todo.setPriority(form.getPriority() != null ? form.getPriority() : Priority.MEDIUM);
+        todo.setDeadline(form.getDeadline());
         todo.setCategory(resolveCategory(form.getCategoryId()));
         // optimistic lock: set version from the form
         todo.setVersion(form.getVersion());
