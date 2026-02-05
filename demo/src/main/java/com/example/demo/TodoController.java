@@ -12,7 +12,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.validation.BindingResult;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableDefault;
 
+import com.example.demo.entity.Todo;
 import jakarta.validation.Valid;
 
 import com.example.demo.form.TodoForm;
@@ -34,20 +39,33 @@ public class TodoController {
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String sort,
         @RequestParam(required = false) String direction,
+        @PageableDefault(size = 10) Pageable pageable,
         Model model
     ) {
         String sortKey = resolveSortKey(sort);
         Sort.Direction dir = resolveDirection(direction);
         Sort sortSpec = Sort.by(dir, sortKey);
+        Pageable request = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortSpec);
+        Page<Todo> page;
 
         if (keyword != null && !keyword.isBlank()) {
-            model.addAttribute("todos", todoService.searchByTitle(keyword, sortSpec));
+            page = todoService.searchByTitle(keyword, request);
         } else {
-            model.addAttribute("todos", todoService.findAll(sortSpec));
+            page = todoService.findAll(request);
         }
+
+        long total = page.getTotalElements();
+        int start = total == 0 ? 0 : page.getNumber() * page.getSize() + 1;
+        int end = total == 0 ? 0 : page.getNumber() * page.getSize() + page.getNumberOfElements();
+
+        model.addAttribute("todos", page.getContent());
+        model.addAttribute("page", page);
         model.addAttribute("keyword", keyword);
         model.addAttribute("sort", sortKey);
         model.addAttribute("direction", dir.name().toLowerCase());
+        model.addAttribute("rangeStart", start);
+        model.addAttribute("rangeEnd", end);
+        model.addAttribute("totalElements", total);
         return "todo/list";
     }
 

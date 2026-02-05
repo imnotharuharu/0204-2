@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.example.demo.entity.Todo;
 
@@ -29,6 +31,9 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     // Title partial match (case-insensitive) with Sort.
     List<Todo> findByTitleContainingIgnoreCase(String keyword, Sort sort);
+
+    // Title partial match (case-insensitive) with Pageable.
+    Page<Todo> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 
     // Example @Query: title partial match using JPQL.
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")

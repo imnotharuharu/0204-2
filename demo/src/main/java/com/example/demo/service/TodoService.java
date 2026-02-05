@@ -3,6 +3,8 @@ package com.example.demo.service;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.entity.Todo;
@@ -42,6 +44,14 @@ public class TodoService {
 
     public List<Todo> searchByTitle(String keyword, Sort sort) {
         return todoRepository.findByTitleContainingIgnoreCase(keyword, sort);
+    }
+
+    public Page<Todo> findAll(Pageable pageable) {
+        return todoRepository.findAll(pageable);
+    }
+
+    public Page<Todo> searchByTitle(String keyword, Pageable pageable) {
+        return todoRepository.findByTitleContainingIgnoreCase(keyword, pageable);
     }
 
     public void deleteById(Long id) {
