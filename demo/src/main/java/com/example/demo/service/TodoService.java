@@ -36,6 +36,14 @@ public class TodoService {
         return todoRepository.findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(keyword);
     }
 
+    public List<Todo> findAll(Sort sort) {
+        return todoRepository.findAll(sort);
+    }
+
+    public List<Todo> searchByTitle(String keyword, Sort sort) {
+        return todoRepository.findByTitleContainingIgnoreCase(keyword, sort);
+    }
+
     public void deleteById(Long id) {
         if (!todoRepository.existsById(id)) {
             throw new TodoNotFoundException(id);

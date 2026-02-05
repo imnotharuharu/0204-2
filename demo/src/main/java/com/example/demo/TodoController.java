@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.validation.BindingResult;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Sort;
 
 import jakarta.validation.Valid;
 
@@ -30,15 +31,37 @@ public class TodoController {
     @GetMapping("/todos")
     public String list(
         @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) String sort,
+        @RequestParam(required = false) String direction,
         Model model
     ) {
+        String sortKey = resolveSortKey(sort);
+        Sort.Direction dir = resolveDirection(direction);
+        Sort sortSpec = Sort.by(dir, sortKey);
+
         if (keyword != null && !keyword.isBlank()) {
-            model.addAttribute("todos", todoService.searchByTitleOrderByCreatedAtDesc(keyword));
+            model.addAttribute("todos", todoService.searchByTitle(keyword, sortSpec));
         } else {
-            model.addAttribute("todos", todoService.findAllOrderByCreatedAtDesc());
+            model.addAttribute("todos", todoService.findAll(sortSpec));
         }
         model.addAttribute("keyword", keyword);
+        model.addAttribute("sort", sortKey);
+        model.addAttribute("direction", dir.name().toLowerCase());
         return "todo/list";
+    }
+
+    private String resolveSortKey(String sort) {
+        if ("title".equals(sort) || "completed".equals(sort) || "createdAt".equals(sort)) {
+            return sort;
+        }
+        return "createdAt";
+    }
+
+    private Sort.Direction resolveDirection(String direction) {
+        if ("asc".equalsIgnoreCase(direction)) {
+            return Sort.Direction.ASC;
+        }
+        return Sort.Direction.DESC;
     }
 
     // Show the form for creating a new todo.

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Sort;
 
 import com.example.demo.entity.Todo;
 
@@ -25,6 +26,9 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 
     // Title partial match (case-insensitive) with createdAt desc.
     List<Todo> findByTitleContainingIgnoreCaseOrderByCreatedAtDesc(String keyword);
+
+    // Title partial match (case-insensitive) with Sort.
+    List<Todo> findByTitleContainingIgnoreCase(String keyword, Sort sort);
 
     // Example @Query: title partial match using JPQL.
     @Query("SELECT t FROM Todo t WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")

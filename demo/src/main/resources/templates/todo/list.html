@@ -74,10 +74,38 @@
         <table class="table table-striped table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th scope="col">タイトル</th>
+              <th scope="col">
+                <a
+                  class="link-dark text-decoration-none"
+                  th:href="@{/todos(sort='title', direction=${(sort == 'title' and direction == 'asc') ? 'desc' : 'asc'}, keyword=${keyword})}"
+                >
+                  タイトル
+                  <span th:if="${sort == 'title' and direction == 'asc'}">▲</span>
+                  <span th:if="${sort == 'title' and direction == 'desc'}">▼</span>
+                </a>
+              </th>
+              <th scope="col">
+                <a
+                  class="link-dark text-decoration-none"
+                  th:href="@{/todos(sort='createdAt', direction=${(sort == 'createdAt' and direction == 'asc') ? 'desc' : 'asc'}, keyword=${keyword})}"
+                >
+                  作成日
+                  <span th:if="${sort == 'createdAt' and direction == 'asc'}">▲</span>
+                  <span th:if="${sort == 'createdAt' and direction == 'desc'}">▼</span>
+                </a>
+              </th>
               <th scope="col">期限日</th>
               <th scope="col">優先度</th>
-              <th scope="col">完了</th>
+              <th scope="col">
+                <a
+                  class="link-dark text-decoration-none"
+                  th:href="@{/todos(sort='completed', direction=${(sort == 'completed' and direction == 'asc') ? 'desc' : 'asc'}, keyword=${keyword})}"
+                >
+                  ステータス
+                  <span th:if="${sort == 'completed' and direction == 'asc'}">▲</span>
+                  <span th:if="${sort == 'completed' and direction == 'desc'}">▼</span>
+                </a>
+              </th>
               <th scope="col" class="text-end">操作</th>
             </tr>
           </thead>
@@ -85,6 +113,9 @@
             <tr th:each="todo : ${todos}">
               <td>
                 <span th:text="${todo.title}" th:classappend="${todo.completed} ? ' text-decoration-line-through text-muted' : ''">サンプル</span>
+              </td>
+              <td>
+                <span th:text="${#temporals.format(todo.createdAt, 'yyyy/MM/dd')}">2026/02/04</span>
               </td>
               <td>
                 <span
