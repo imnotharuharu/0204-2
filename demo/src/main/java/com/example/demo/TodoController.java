@@ -9,6 +9,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.validation.BindingResult;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
@@ -197,6 +204,52 @@ public class TodoController {
             redirectAttributes.addFlashAttribute("errorMessage", "削除に失敗しました");
         }
         return "redirect:/todos";
+    }
+
+    @GetMapping({"/todo/export", "/todos/export"})
+    public ResponseEntity<byte[]> exportCsv() {
+        List<Todo> todos = todoService.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        byte[] csv = buildCsv(todos);
+
+        String filename = "todo_" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE) + ".csv";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+
+        return ResponseEntity.ok().headers(headers).body(csv);
+    }
+
+    private byte[] buildCsv(List<Todo> todos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID,タイトル,登録者,ステータス,作成日\r\n");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        for (Todo t : todos) {
+            String status = Boolean.TRUE.equals(t.getCompleted()) ? "完了" : "未完了";
+            String createdAt = t.getCreatedAt() != null ? t.getCreatedAt().format(fmt) : "";
+            sb.append(csv(t.getId() != null ? t.getId().toString() : "")).append(",");
+            sb.append(csv(t.getTitle())).append(",");
+            sb.append(csv(t.getAuthor())).append(",");
+            sb.append(csv(status)).append(",");
+            sb.append(csv(createdAt)).append("\r\n");
+        }
+
+        byte[] bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] body = sb.toString().getBytes(StandardCharsets.UTF_8);
+        byte[] out = new byte[bom.length + body.length];
+        System.arraycopy(bom, 0, out, 0, bom.length);
+        System.arraycopy(body, 0, out, bom.length, body.length);
+        return out;
+    }
+
+    private String csv(String value) {
+        if (value == null) {
+            return "";
+        }
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") || escaped.contains("\r")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
     }
 
     // Display the details for a single todo by id.

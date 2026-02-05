@@ -23,6 +23,11 @@
 
       <form th:action="@{/todos/complete}" method="post" class="card p-4 shadow-sm">
         <div class="mb-3">
+          <label class="form-label">作成者</label>
+          <input type="text" class="form-control" th:value="${todoForm.author}" readonly />
+          <input type="hidden" name="author" th:value="${todoForm.author}" />
+        </div>
+        <div class="mb-3">
           <label class="form-label">タイトル</label>
           <input type="text" class="form-control" th:value="${todoForm.title}" readonly />
           <input type="hidden" name="title" th:value="${todoForm.title}" />
