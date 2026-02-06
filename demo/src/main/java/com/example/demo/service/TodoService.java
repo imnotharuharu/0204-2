@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.demo.aop.Auditable;
 import com.example.demo.entity.Todo;
 import com.example.demo.entity.Priority;
 import com.example.demo.entity.Category;
@@ -45,6 +46,7 @@ public class TodoService {
         this.notificationService = notificationService;
     }
 
+    @Auditable(action = "CREATE", entityType = "Todo", useResultEntityId = true)
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public Todo createFromForm(TodoForm form, AppUser user) {
         try {
@@ -121,6 +123,7 @@ public class TodoService {
         return form;
     }
 
+    @Auditable(action = "UPDATE", entityType = "Todo", entityIdParamIndex = 0)
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public void updateFromForm(Long id, TodoForm form, Long userId, boolean isAdmin) {
         try {
@@ -142,6 +145,7 @@ public class TodoService {
         }
     }
 
+    @Auditable(action = "UPDATE_API", entityType = "Todo", entityIdParamIndex = 0)
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public Todo updateFromApi(Long id, String title, String author, String detail, Priority priority, java.time.LocalDate deadline, Long categoryId, Boolean completed, Long userId, boolean isAdmin) {
         try {
@@ -165,6 +169,7 @@ public class TodoService {
         }
     }
 
+    @Auditable(action = "DELETE", entityType = "Todo", entityIdParamIndex = 0)
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public void deleteById(Long id, Long userId, boolean isAdmin) {
         try {
@@ -178,6 +183,7 @@ public class TodoService {
         }
     }
 
+    @Auditable(action = "TOGGLE", entityType = "Todo", entityIdParamIndex = 0)
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public void toggleCompleted(Long id, Long userId, boolean isAdmin) {
         try {
@@ -192,6 +198,7 @@ public class TodoService {
         }
     }
 
+    @Auditable(action = "BULK_DELETE", entityType = "Todo")
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
     public void deleteAllByIds(List<Long> ids, Long userId, boolean isAdmin) {
         try {

@@ -20,7 +20,32 @@ public class AuditLogService {
     public void log(String action, String message) {
         AuditLog log = AuditLog.builder()
             .action(action)
+            .entityType("SYSTEM")
             .message(message != null ? message : "")
+            .build();
+        auditLogRepository.save(log);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void logDetailed(
+        String action,
+        String entityType,
+        Long entityId,
+        Long userId,
+        String oldValue,
+        String newValue,
+        String ipAddress,
+        String message
+    ) {
+        AuditLog log = AuditLog.builder()
+            .action(action)
+            .entityType(entityType)
+            .entityId(entityId)
+            .userId(userId)
+            .oldValue(oldValue)
+            .newValue(newValue)
+            .ipAddress(ipAddress)
+            .message(message)
             .build();
         auditLogRepository.save(log);
     }
