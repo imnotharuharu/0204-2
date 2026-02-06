@@ -43,6 +43,9 @@ class TodoServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private TodoService todoService;
 

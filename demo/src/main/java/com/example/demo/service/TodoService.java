@@ -29,17 +29,20 @@ public class TodoService {
     private final CategoryRepository categoryRepository;
     private final TodoHistoryRepository todoHistoryRepository;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     public TodoService(
         TodoRepository todoRepository,
         CategoryRepository categoryRepository,
         TodoHistoryRepository todoHistoryRepository,
-        AuditLogService auditLogService
+        AuditLogService auditLogService,
+        NotificationService notificationService
     ) {
         this.todoRepository = todoRepository;
         this.categoryRepository = categoryRepository;
         this.todoHistoryRepository = todoHistoryRepository;
         this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(rollbackFor = Exception.class, noRollbackFor = BusinessException.class)
@@ -57,6 +60,7 @@ public class TodoService {
             Todo saved = todoRepository.save(todo);
             todoHistoryRepository.save(TodoHistory.create(saved.getId(), "CREATE"));
             auditLogService.log("CREATE", "Todo created id=" + saved.getId());
+            notificationService.sendTodoCreatedEmail(user.getUsername(), saved.getId());
             return saved;
         } catch (Exception ex) {
             auditLogService.log("CREATE_FAIL", ex.getMessage());
